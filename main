@@ -1,17 +1,40 @@
 import urllib.request
+import urllib
+import requests
+
 from bs4 import BeautifulSoup
-import csv
-from datetime import datetime
-quote_page = "http://www.bloomberg.com/quote/SPX:IND"
+from PIL import Image
+import io
+import os
+file_path=os.path.dirname("test/00000001.png")
+if not os.path.exists(file_path):
+    os.makedirs(file_path)
+
+def get_manga_pic (query_url):
+    page = urllib.request.urlopen(query_url)
+    soup = BeautifulSoup(page, "html.parser")
+    pic = soup.find("img", attrs={"border": "0", "oncontextmenu": "return false"}).get("src")
+    print(pic)
+    response = requests.get(pic)
+    img_data = Image.open(io.BytesIO(response.content))
+    return img_data
+
+quote_page = "http://www.cartoonmad.com/comic/102900021102001.html"
 page = urllib.request.urlopen(quote_page)
 soup = BeautifulSoup(page, "html.parser")
-name_box = soup.find("h1", attrs={"class": "name"})
-name = name_box.text.strip()
-print(name)
-price_box = soup.find("div", attrs={"class":"price"})
-price = price_box.text
-print(price)
+pic = soup.find("img", attrs={"border":"0","oncontextmenu":"return false"}).get("src")
 
-with open("index.csv", 'a') as csv_file:
-    writer = csv.writer(csv_file)
-    writer.writerow([name, price, datetime.now()])
+pages= soup.find("select",attrs={"name":"jump"}).find_all("option")
+for page in pages:
+    if page.get("value")!= None:
+        print(page)
+        print (page.get("value"))
+        url="http://www.cartoonmad.com/comic/"+page.get("value")
+        img=get_manga_pic(url)
+        out_name=page.get("value").split(".html")[0]+".jpg"
+        out_name=file_path+"/"+out_name
+        img.save(out_name)
+
+
+
+
